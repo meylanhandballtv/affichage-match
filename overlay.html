@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MHBTV – Score Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: 'Barlow Condensed', sans-serif;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── SCOREBOARD ── */
+  #scoreboard {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: stretch;
+    height: 72px;
+    filter: drop-shadow(0 4px 18px rgba(0,0,0,0.55));
+    transition: opacity 0.3s ease;
+  }
+
+  #scoreboard.hidden { opacity: 0; pointer-events: none; }
+
+  /* Team blocks */
+  .team-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 22px;
+    background: rgba(10, 10, 10, 0.92);
+    min-width: 220px;
+  }
+
+  .team-block.home { border-right: none; }
+  .team-block.away { border-left: none; flex-direction: row-reverse; }
+
+  .team-name {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* Sanctions */
+  .sanctions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .sanction-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .card {
+    width: 14px;
+    height: 18px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  .card.yellow { background: #F5C518; }
+  .card.red    { background: #E02020; color: #fff; }
+  .card.blue   { background: #1565C0; color: #fff; }
+  .card.white  { background: #FFFFFF; border: 1px solid #888; }
+
+  .suspension-badge {
+    background: rgba(230,60,60,0.9);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.03em;
+  }
+
+  /* Score center */
+  #score-center {
+    display: flex;
+    align-items: center;
+    background: #C8001E;
+    padding: 0 4px;
+  }
+
+  .score-digit {
+    font-size: 52px;
+    font-weight: 900;
+    color: #FFFFFF;
+    line-height: 1;
+    padding: 0 18px;
+    letter-spacing: -0.01em;
+  }
+
+  .score-sep {
+    font-size: 40px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    line-height: 1;
+    padding-bottom: 4px;
+  }
+
+  /* Time block */
+  #time-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,10,0.92);
+    padding: 0 20px;
+    min-width: 90px;
+    border-left: 2px solid #C8001E;
+  }
+
+  #time-display {
+    font-size: 26px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  #period-display {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 3px;
+  }
+
+  /* ── TIMEOUT BANNER ── */
+  #timeout-banner {
+    position: absolute;
+    top: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,10,0.92);
+    border-left: 4px solid #C8001E;
+    padding: 10px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  }
+
+  #timeout-banner.visible { opacity: 1; }
+
+  #timeout-label {
+    font-size: 18px;
+    font-weight: 900;
+    color: #C8001E;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  #timeout-team {
+    font-size: 18px;
+    font-weight: 600;
+    color: #FFFFFF;
+    letter-spacing: 0.04em;
+  }
+
+  #timeout-timer {
+    font-size: 18px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-left: 8px;
+  }
+
+  /* ── GOAL FLASH ── */
+  #goal-flash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(10,10,10,0.92);
+    border: 2px solid #C8001E;
+    padding: 22px 56px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 24px rgba(0,0,0,0.7));
+    transition: opacity 0.25s ease;
+  }
+
+  #goal-flash.show { opacity: 1; }
+
+  #goal-flash-label {
+    font-size: 52px;
+    font-weight: 900;
+    color: #C8001E;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    line-height: 1;
+  }
+
+  #goal-flash-team {
+    font-size: 22px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+
+  /* ── EVENT TICKER ── */
+  #event-ticker {
+    position: absolute;
+    bottom: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,10,0.88);
+    border-left: 3px solid #C8001E;
+    padding: 7px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  #event-ticker.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- GOAL FLASH -->
+<div id="goal-flash">
+  <div id="goal-flash-label">BUT !</div>
+  <div id="goal-flash-team" id="goal-flash-team"></div>
+</div>
+
+<!-- TIMEOUT BANNER -->
+<div id="timeout-banner">
+  <span id="timeout-label">TEMPS MORT</span>
+  <span id="timeout-team"></span>
+  <span id="timeout-timer"></span>
+</div>
+
+<!-- EVENT TICKER -->
+<div id="event-ticker"></div>
+
+<!-- SCOREBOARD -->
+<div id="scoreboard">
+
+  <!-- Équipe Domicile -->
+  <div class="team-block home">
+    <div class="sanctions" id="sanctions-home"></div>
+    <div class="team-name" id="team-home">DOMICILE</div>
+  </div>
+
+  <!-- Score -->
+  <div id="score-center">
+    <span class="score-digit" id="score-home">0</span>
+    <span class="score-sep">:</span>
+    <span class="score-digit" id="score-away">0</span>
+  </div>
+
+  <!-- Équipe Visiteur -->
+  <div class="team-block away">
+    <div class="team-name" id="team-away">VISITEUR</div>
+    <div class="sanctions" id="sanctions-away"></div>
+  </div>
+
+  <!-- Temps -->
+  <div id="time-block">
+    <div id="time-display">00:00</div>
+    <div id="period-display">1ère MT</div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  ÉTAT LOCAL (miroir du serveur)
+//  Schéma identique à server.js
+// ══════════════════════════════════════════
+let state = {
+  homeName: 'DOMICILE',
+  awayName: 'EXTÉRIEUR',
+  homeScore: 0,
+  awayScore: 0,
+  homeSanctions: { yellow: 0, red: 0, blue: 0, white: 0, min2: 0 },
+  awaySanctions: { yellow: 0, red: 0, blue: 0, white: 0, min2: 0 },
+  timer: { running: false, seconds: 0, direction: 'up', lastSync: Date.now() },
+  period: 1,
+  timeoutActive: false,
+  visible: true,
+};
+
+// Timers locaux (UI uniquement, pas dans l'état serveur)
+let _timerInterval   = null;
+let _timeoutInterval = null;
+let _goalFlashTO     = null;
+let _tickerTO        = null;
+let _timeoutSeconds  = 60;
+
+// ══════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════
+function render() {
+  document.getElementById('score-home').textContent = state.homeScore;
+  document.getElementById('score-away').textContent = state.awayScore;
+  document.getElementById('team-home').textContent  = state.homeName;
+  document.getElementById('team-away').textContent  = state.awayName;
+  renderSanctions('home');
+  renderSanctions('away');
+  updatePeriodLabel();
+  document.getElementById('scoreboard').classList.toggle('hidden', !state.visible);
+}
+
+function renderSanctions(side) {
+  const s  = side === 'home' ? state.homeSanctions : state.awaySanctions;
+  const el = document.getElementById('sanctions-' + side);
+  el.innerHTML = '';
+
+  const row1 = document.createElement('div');
+  row1.className = 'sanction-row';
+  for (let i = 0; i < s.yellow; i++) row1.appendChild(makeCard('yellow', 'J'));
+  for (let i = 0; i < s.red;    i++) row1.appendChild(makeCard('red',    'R'));
+  for (let i = 0; i < s.blue;   i++) row1.appendChild(makeCard('blue',   'B'));
+  for (let i = 0; i < s.white;  i++) row1.appendChild(makeCard('white',  'D'));
+
+  const row2 = document.createElement('div');
+  row2.className = 'sanction-row';
+  for (let i = 0; i < s.min2; i++) {
+    const b = document.createElement('span');
+    b.className = 'suspension-badge';
+    b.textContent = '2\'';
+    row2.appendChild(b);
+  }
+  el.appendChild(row1);
+  el.appendChild(row2);
+}
+
+function makeCard(type, letter) {
+  const d = document.createElement('div');
+  d.className = 'card ' + type;
+  d.textContent = letter;
+  return d;
+}
+
+function updatePeriodLabel() {
+  const labels = { 1: '1ère MT', 2: '2ème MT', 3: 'Prolong.' };
+  document.getElementById('period-display').textContent = labels[state.period] || '';
+}
+
+function formatTime(s) {
+  const m   = Math.floor(Math.abs(s) / 60);
+  const sec = Math.abs(s) % 60;
+  return (s < 0 ? '-' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function updateTimerDisplay() {
+  document.getElementById('time-display').textContent = formatTime(state.timer.seconds);
+}
+
+// ══════════════════════════════════════════
+//  TIMER LOCAL
+// ══════════════════════════════════════════
+function startLocalTimer() {
+  if (_timerInterval) return;
+  _timerInterval = setInterval(() => {
+    state.timer.seconds += state.timer.direction === 'up' ? 1 : -1;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function stopLocalTimer() {
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+}
+
+function applyTimerState() {
+  stopLocalTimer();
+  // Recalcule les secondes en tenant compte du temps écoulé depuis lastSync
+  if (state.timer.running) {
+    const elapsed = Math.floor((Date.now() - state.timer.lastSync) / 1000);
+    state.timer.seconds += state.timer.direction === 'up' ? elapsed : -elapsed;
+    startLocalTimer();
+  }
+  updateTimerDisplay();
+}
+
+// ══════════════════════════════════════════
+//  GOAL FLASH
+// ══════════════════════════════════════════
+function showGoalFlash(teamName) {
+  document.getElementById('goal-flash-team').textContent = teamName;
+  const el = document.getElementById('goal-flash');
+  el.classList.add('show');
+  clearTimeout(_goalFlashTO);
+  _goalFlashTO = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ══════════════════════════════════════════
+//  TICKER
+// ══════════════════════════════════════════
+function showTicker(msg, duration = 4000) {
+  const el = document.getElementById('event-ticker');
+  el.textContent = msg;
+  el.classList.add('visible');
+  clearTimeout(_tickerTO);
+  _tickerTO = setTimeout(() => el.classList.remove('visible'), duration);
+}
+
+// ══════════════════════════════════════════
+//  TIMEOUT BANNER
+// ══════════════════════════════════════════
+function startTimeoutBanner(teamName) {
+  clearInterval(_timeoutInterval);
+  _timeoutSeconds = 60;
+  document.getElementById('timeout-team').textContent  = teamName;
+  document.getElementById('timeout-timer').textContent = '1:00';
+  document.getElementById('timeout-banner').classList.add('visible');
+  _timeoutInterval = setInterval(() => {
+    _timeoutSeconds--;
+    document.getElementById('timeout-timer').textContent = formatTime(_timeoutSeconds);
+    if (_timeoutSeconds <= 0) endTimeoutBanner();
+  }, 1000);
+}
+
+function endTimeoutBanner() {
+  clearInterval(_timeoutInterval);
+  document.getElementById('timeout-banner').classList.remove('visible');
+}
+
+// ══════════════════════════════════════════
+//  APPLICATION D'UN MESSAGE SSE
+// ══════════════════════════════════════════
+function applyMessage(msg) {
+  switch (msg.type) {
+
+    // ── Resynchronisation complète (connexion initiale ou reconnexion) ──
+    case 'state':
+      state = msg.state;
+      applyTimerState();
+      render();
+      break;
+
+    // ── Scores ──
+    case 'score_home_inc':
+      state.homeScore++;
+      showGoalFlash(state.homeName);
+      showTicker('⚽ BUT – ' + state.homeName);
+      render(); break;
+    case 'score_away_inc':
+      state.awayScore++;
+      showGoalFlash(state.awayName);
+      showTicker('⚽ BUT – ' + state.awayName);
+      render(); break;
+    case 'score_home_dec':
+      state.homeScore = Math.max(0, state.homeScore - 1);
+      render(); break;
+    case 'score_away_dec':
+      state.awayScore = Math.max(0, state.awayScore - 1);
+      render(); break;
+
+    // ── Équipes ──
+    case 'set_teams':
+      state.homeName = msg.homeName;
+      state.awayName = msg.awayName;
+      render(); break;
+
+    // ── Chrono ──
+    case 'timer_start':
+      state.timer.running   = true;
+      state.timer.seconds   = msg.seconds;
+      state.timer.direction = msg.direction;
+      state.timer.lastSync  = Date.now();
+      applyTimerState(); break;
+    case 'timer_stop':
+      state.timer.running  = false;
+      state.timer.seconds  = msg.seconds;
+      stopLocalTimer();
+      updateTimerDisplay(); break;
+    case 'timer_reset':
+      state.timer.running   = false;
+      state.timer.seconds   = msg.seconds;
+      state.timer.direction = msg.direction;
+      stopLocalTimer();
+      updateTimerDisplay(); break;
+
+    // ── Sanctions ──
+    case 'sanction': {
+      const sanctions = msg.side === 'home' ? state.homeSanctions : state.awaySanctions;
+      sanctions[msg.stype]++;
+      showTicker(msg.label);
+      render(); break;
+    }
+
+    // ── Temps mort ──
+    case 'timeout_start':
+      state.timeoutActive = true;
+      startTimeoutBanner(msg.teamName);
+      showTicker('⏸ Temps mort – ' + msg.teamName); break;
+    case 'timeout_end':
+      state.timeoutActive = false;
+      endTimeoutBanner(); break;
+
+    // ── Période ──
+    case 'period_next':
+      state.period = state.period >= 3 ? 1 : state.period + 1;
+      render();
+      showTicker('🕐 ' + (['','1ère mi-temps','2ème mi-temps','Prolongation'])[state.period]); break;
+
+    // ── Visibilité ──
+    case 'toggle_overlay':
+      state.visible = !state.visible;
+      render(); break;
+
+    // ── Reset complet ──
+    case 'full_reset':
+      state = msg.state;
+      stopLocalTimer();
+      applyTimerState();
+      render(); break;
+  }
+}
+
+// ══════════════════════════════════════════
+//  CONNEXION SSE AU SERVEUR
+// ══════════════════════════════════════════
+let _sse = null;
+
+function connectSSE() {
+  if (_sse) _sse.close();
+  _sse = new EventSource('/events');
+
+  _sse.onopen = () => console.log('[Overlay] SSE connecté');
+
+  _sse.onmessage = (e) => {
+    try { applyMessage(JSON.parse(e.data)); }
+    catch (err) { console.warn('[Overlay] message SSE invalide', err); }
+  };
+
+  _sse.onerror = () => {
+    console.warn('[Overlay] SSE déconnecté — reconnexion dans 3s');
+    _sse.close();
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+// Init
+connectSSE();
+</script>
+</body>
+</html>
