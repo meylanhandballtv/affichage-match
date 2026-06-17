@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MHBTV – Panneau de contrôle</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0e0e0e;
+    --surface:  #181818;
+    --surface2: #222222;
+    --border:   #2e2e2e;
+    --red:      #C8181E;
+    --red-dim:  #7a0f13;
+    --yellow:   #F5C400;
+    --orange:   #FF6B00;
+    --blue:     #1565C0;
+    --white:    #FFFFFF;
+    --muted:    #6b6b6b;
+    --text:     #f0f0f0;
+    --green:    #2E7D32;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    padding: 16px;
+    user-select: none;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--muted); font-weight: 400; font-size: 14px; letter-spacing: 0.1em; }
+
+  /* ── SETUP BAR ── */
+  .setup-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .setup-bar label { font-size: 12px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-right: 6px; }
+
+  .setup-bar input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 6px 10px;
+    width: 150px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .setup-bar input:focus { outline: 1px solid var(--red); }
+
+  .btn-apply {
+    background: var(--red);
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 7px 18px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-apply:hover { background: #a51217; }
+
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  /* ── TEAM PANEL ── */
+  .team-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .team-header {
+    padding: 10px 16px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--red);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .team-header .team-label { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; }
+
+  /* Score */
+  .score-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-big {
+    font-size: 64px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .col-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .btn-score {
+    width: 44px;
+    height: 36px;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-score:active { transform: scale(0.92); }
+  .btn-plus  { background: var(--green); color: #fff; }
+  .btn-plus:hover  { background: #388E3C; }
+  .btn-minus { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); font-size: 16px; }
+  .btn-minus:hover { background: #2a2a2a; color: #fff; }
+
+  /* Sanctions */
+  .sanctions-section { padding: 12px 16px; }
+
+  .sanctions-title {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .sanction-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .sanction-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 120px;
+  }
+
+  .card-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 16px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Barlow', sans-serif;
+    flex-shrink: 0;
+  }
+
+  .chip-yellow { background: #F5C400; color: #1a1a1a; }
+  .chip-red    { background: #D92B2B; color: #fff; }
+  .chip-blue   { background: #1565C0; color: #fff; }
+  .chip-white  { background: #fff; color: #1a1a1a; border: 1px solid #999; }
+  .chip-2min   { background: #FF6B00; color: #fff; font-size: 9px; width: 28px; }
+
+  .sanction-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .kbd-hint { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+  .sanction-count {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .btn-sm {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 3px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  .btn-sm:active { transform: scale(0.88); }
+  .btn-sm-plus  { background: var(--surface2); color: #aaa; border: 1px solid var(--border); }
+  .btn-sm-plus:hover  { background: #2e2e2e; color: #fff; }
+  .btn-sm-minus { background: transparent; color: var(--muted); border: 1px solid transparent; }
+  .btn-sm-minus:hover { color: var(--red); }
+
+  /* ── CENTER PANEL ── */
+  .center-panel {
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .timer-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .timer-display {
+    font-size: 48px;
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+    padding: 16px 12px 8px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .period-display {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--red);
+    text-align: center;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding-bottom: 12px;
+  }
+
+  .timer-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--border);
+  }
+
+  .timer-btns button {
+    padding: 10px;
+    border: none;
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-right: 1px solid var(--border);
+  }
+
+  .timer-btns button:last-child { border-right: none; }
+  .timer-btns button:hover { background: #2a2a2a; }
+  .timer-btns .btn-play  { color: #5cb85c; }
+  .timer-btns .btn-pause { color: var(--yellow); }
+  .timer-btns .btn-reset { color: var(--muted); }
+  .timer-btns .btn-period { color: var(--red); }
+
+  .timer-btns.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  /* Center action buttons */
+  .action-btn {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .action-btn:hover { background: var(--surface2); }
+  .action-btn.active { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .action-btn.goal-btn { background: var(--green); border-color: #2E7D32; color: #fff; }
+  .action-btn.goal-btn:hover { background: #388E3C; }
+
+  /* ── KEYBOARD REFERENCE ── */
+  .kbd-ref {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+
+  .kbd-ref-title {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .kbd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 4px 20px;
+  }
+
+  .kbd-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #aaa;
+    padding: 2px 0;
+  }
+
+  kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border: 1px solid #3a3a3a;
+    border-bottom: 2px solid #3a3a3a;
+    border-radius: 3px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ccc;
+    padding: 1px 5px;
+    min-width: 22px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* ── STATUS BAR ── */
+  #status-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  #status-bar .status-ok { color: #5cb85c; }
+  #status-bar .status-warn { color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<h1>🎙 MHBTV <span>— Panneau de contrôle match</span></h1>
+
+<!-- Setup bar -->
+<div class="setup-bar">
+  <label>Équipe domicile</label>
+  <input type="text" id="input-home" placeholder="DOMICILE" maxlength="20">
+  <label>Équipe extérieur</label>
+  <input type="text" id="input-away" placeholder="EXTÉRIEUR" maxlength="20">
+  <button class="btn-apply" onclick="applyNames()">Appliquer</button>
+</div>
+
+<!-- Main control grid -->
+<div class="main-grid">
+
+  <!-- HOME TEAM -->
+  <div class="team-panel">
+    <div class="team-header">
+      <span id="ctrl-home-name">DOMICILE</span>
+      <span class="team-label">Domicile</span>
+    </div>
+    <div class="score-section">
+      <div class="col-btns">
+        <button class="btn-score btn-plus"  onclick="send('score',{team:'home',delta:1})">+</button>
+        <button class="btn-score btn-minus" onclick="send('score',{team:'home',delta:-1})">−</button>
+      </div>
+      <div class="score-big" id="ctrl-home-score">0</div>
+    </div>
+    <div class="sanctions-section">
+      <div class="sanctions-title">Sanctions</div>
+
+      <div class="sanction-row">
+        <div class="sanction-label">
+          <span class="card-chip chip-yellow">J</span>
+          <span class="sanction-name">Carton jaune</span>
+        </div>
+        <span class="kbd-hint"><kbd>1</kbd></span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'home',type:'yellow',delta:-1})">−</button>
+        <span class="sanction-count" id="ctrl-home-yellow">0</span>
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'home',type:'yellow',delta:1})">+</button>
+      </div>
+
+      <div class="sanction-row">
+        <div class="sanction-label">
+          <span class="card-chip chip-2min">2'</span>
+          <span class="sanction-name">2 minutes</span>
+        </div>
+        <span class="kbd-hint"><kbd>5</kbd></span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'home',type:'min2',delta:-1})">−</button>
+        <span class="sanction-count" id="ctrl-home-2min">0</span>
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'home',type:'min2',delta:1})">+</button>
+      </div>
+
+      <div class="sanction-row">
+        <div class="sanction-label">
+          <span class="card-chip chip-red">R</span>
+          <span class="sanction-name">Carton rouge</span>
+        </div>
+        <span class="kbd-hint"><kbd>2</kbd></span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'home',type:'red',delta:-1})">−</button>
+        <span class="sanction-count" id="ctrl-home-red">0</span>
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'home',type:'red',delta:1})">+</button>
+      </div>
+
+      <div class="sanction-row">
+        <div class="sanction-label">
+          <span class="card-chip chip-blue">B</span>
+          <span class="sanction-name">Carton bleu</span>
+        </div>
+        <span class="kbd-hint"><kbd>3</kbd></span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'home',type:'blue',delta:-1})">−</button>
+        <span class="sanction-count" id="ctrl-home-blue">0</span>
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'home',type:'blue',delta:1})">+</button>
+      </div>
+
+      <div class="sanction-row">
+        <div class="sanction-label">
+          <span class="card-chip chip-white">W</span>
+          <span class="sanction-name">Carton blanc</span>
+        </div>
+        <span class="kbd-hint"><kbd>4</kbd></span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'home',type:'white',delta:-1})">−</button>
+        <span class="sanction-count" id="ctrl-home-white">0</span>
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'home',type:'white',delta:1})">+</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CENTER PANEL -->
+  <div class="center-panel">
+
+    <!-- Timer -->
+    <div class="timer-card">
+      <div class="timer-display" id="ctrl-timer">00:00</div>
+      <div class="period-display" id="ctrl-period">1ÈRE MI-TEMPS</div>
+      <div class="timer-btns four">
+        <button class="btn-play"  onclick="send('timer',{cmd:'start'})">▶</button>
+        <button class="btn-pause" onclick="send('timer',{cmd:'pause'})">⏸</button>
+        <button class="btn-reset" onclick="send('timer',{cmd:'reset'})">↺</button>
+        <button class="btn-period" onclick="nextPeriodCtrl()">P+1</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <button class="action-btn goal-btn" onclick="send('goal',{})">⚽ BUT !</button>
+    <button class="action-btn" id="btn-timeout" onclick="toggleTimeoutCtrl()">⏸ TEMPS MORT</button>
+    <button class="action-btn" id="btn-visibility" onclick="toggleVisibilityCtrl()">👁 MASQUER OVERLAY</button>
+
+  </div>
+
+  <!-- AWAY TEAM -->
+  <div class="team-panel">
+    <div class="team-header">
+      <span class="team-label">Extérieur</span>
+      <span id="ctrl-away-name">EXTÉRIEUR</span>
+    </div>
+    <div class="score-section">
+      <div class="score-big" id="ctrl-away-score">0</div>
+      <div class="col-btns">
+        <button class="btn-score btn-plus"  onclick="send('score',{team:'away',delta:1})">+</button>
+        <button class="btn-score btn-minus" onclick="send('score',{team:'away',delta:-1})">−</button>
+      </div>
+    </div>
+    <div class="sanctions-section">
+      <div class="sanctions-title">Sanctions</div>
+
+      <div class="sanction-row">
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'away',type:'yellow',delta:1})">+</button>
+        <span class="sanction-count" id="ctrl-away-yellow">0</span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'away',type:'yellow',delta:-1})">−</button>
+        <span class="kbd-hint"><kbd>6</kbd></span>
+        <div class="sanction-label" style="justify-content: flex-end;">
+          <span class="sanction-name">Carton jaune</span>
+          <span class="card-chip chip-yellow">J</span>
+        </div>
+      </div>
+
+      <div class="sanction-row">
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'away',type:'min2',delta:1})">+</button>
+        <span class="sanction-count" id="ctrl-away-2min">0</span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'away',type:'min2',delta:-1})">−</button>
+        <span class="kbd-hint"><kbd>0</kbd></span>
+        <div class="sanction-label" style="justify-content: flex-end;">
+          <span class="sanction-name">2 minutes</span>
+          <span class="card-chip chip-2min">2'</span>
+        </div>
+      </div>
+
+      <div class="sanction-row">
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'away',type:'red',delta:1})">+</button>
+        <span class="sanction-count" id="ctrl-away-red">0</span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'away',type:'red',delta:-1})">−</button>
+        <span class="kbd-hint"><kbd>7</kbd></span>
+        <div class="sanction-label" style="justify-content: flex-end;">
+          <span class="sanction-name">Carton rouge</span>
+          <span class="card-chip chip-red">R</span>
+        </div>
+      </div>
+
+      <div class="sanction-row">
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'away',type:'blue',delta:1})">+</button>
+        <span class="sanction-count" id="ctrl-away-blue">0</span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'away',type:'blue',delta:-1})">−</button>
+        <span class="kbd-hint"><kbd>8</kbd></span>
+        <div class="sanction-label" style="justify-content: flex-end;">
+          <span class="sanction-name">Carton bleu</span>
+          <span class="card-chip chip-blue">B</span>
+        </div>
+      </div>
+
+      <div class="sanction-row">
+        <button class="btn-sm btn-sm-plus"  onclick="send('sanction',{team:'away',type:'white',delta:1})">+</button>
+        <span class="sanction-count" id="ctrl-away-white">0</span>
+        <button class="btn-sm btn-sm-minus" onclick="send('sanction',{team:'away',type:'white',delta:-1})">−</button>
+        <span class="kbd-hint"><kbd>9</kbd></span>
+        <div class="sanction-label" style="justify-content: flex-end;">
+          <span class="sanction-name">Carton blanc</span>
+          <span class="card-chip chip-white">W</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Keyboard reference -->
+<div class="kbd-ref">
+  <div class="kbd-ref-title">Raccourcis clavier</div>
+  <div class="kbd-grid">
+    <div class="kbd-item"><kbd>Espace</kbd> Démarrer / Pause chrono</div>
+    <div class="kbd-item"><kbd>R</kbd> Remettre à zéro</div>
+    <div class="kbd-item"><kbd>P</kbd> Prochaine mi-temps</div>
+    <div class="kbd-item"><kbd>Q</kbd> But domicile &nbsp;<kbd>⇧Q</kbd> Annuler</div>
+    <div class="kbd-item"><kbd>E</kbd> But extérieur &nbsp;<kbd>⇧E</kbd> Annuler</div>
+    <div class="kbd-item"><kbd>Z</kbd> Flash BUT ! (sans score)</div>
+    <div class="kbd-item"><kbd>T</kbd> Temps mort</div>
+    <div class="kbd-item"><kbd>V</kbd> Masquer/afficher overlay</div>
+    <div class="kbd-item"><kbd>1</kbd>–<kbd>5</kbd> Sanctions domicile (J/R/B/W/2')</div>
+    <div class="kbd-item"><kbd>6</kbd>–<kbd>0</kbd> Sanctions extérieur (J/R/B/W/2')</div>
+    <div class="kbd-item"><kbd>⇧</kbd>+num Annuler une sanction</div>
+  </div>
+</div>
+
+<div id="status-bar">
+  <span class="status-warn">⚠ Ouvrir <strong>handball-overlay.html</strong> dans un second onglet ou navigateur pour synchroniser via BroadcastChannel</span>
+</div>
+
+<script>
+  const bc = new BroadcastChannel('handball_overlay');
+
+  // ── State miroir ──
+  const ctrl = {
+    homeScore: 0, awayScore: 0,
+    homeSanctions: {yellow:0,red:0,blue:0,white:0,min2:0},
+    awaySanctions: {yellow:0,red:0,blue:0,white:0,min2:0},
+    timerSeconds: 0, timerRunning: false,
+    period: 1, timeout: false, visible: true,
+  };
+
+  let timerIv = null;
+
+  function send(action, payload) {
+    bc.postMessage({ action, payload });
+    applyLocally(action, payload);
+  }
+
+  function applyLocally(action, payload) {
+    switch(action) {
+      case 'score': {
+        const k = payload.team === 'home' ? 'homeScore' : 'awayScore';
+        ctrl[k] = Math.max(0, ctrl[k] + payload.delta);
+        document.getElementById(`ctrl-${payload.team}-score`).textContent = ctrl[k];
+        break;
+      }
+      case 'sanction': {
+        const s = payload.team === 'home' ? ctrl.homeSanctions : ctrl.awaySanctions;
+        s[payload.type] = Math.max(0, (s[payload.type]||0) + payload.delta);
+        const idMap = {yellow:'yellow',red:'red',blue:'blue',white:'white',min2:'2min'};
+        document.getElementById(`ctrl-${payload.team}-${idMap[payload.type]}`).textContent = s[payload.type];
+        break;
+      }
+      case 'timer': {
+        if (payload.cmd === 'start') {
+          if (!ctrl.timerRunning) { ctrl.timerRunning = true; timerIv = setInterval(() => { ctrl.timerSeconds++; updateTimerDisplay(); }, 1000); }
+        } else if (payload.cmd === 'pause') {
+          ctrl.timerRunning = false; clearInterval(timerIv);
+        } else if (payload.cmd === 'reset') {
+          ctrl.timerRunning = false; clearInterval(timerIv); ctrl.timerSeconds = 0; updateTimerDisplay();
+        }
+        break;
+      }
+      case 'period': {
+        ctrl.period = Math.min(ctrl.period + 1, 3);
+        const labels = ['', '1ÈRE MI-TEMPS', '2ÈME MI-TEMPS', 'PROLONGATION'];
+        document.getElementById('ctrl-period').textContent = labels[ctrl.period] || 'EXTRA-TIME';
+        break;
+      }
+      case 'timeout': {
+        ctrl.timeout = !ctrl.timeout;
+        document.getElementById('btn-timeout').classList.toggle('active', ctrl.timeout);
+        if (ctrl.timeout) { ctrl.timerRunning = false; clearInterval(timerIv); }
+        else { ctrl.timerRunning = true; timerIv = setInterval(() => { ctrl.timerSeconds++; updateTimerDisplay(); }, 1000); }
+        break;
+      }
+      case 'visibility': {
+        ctrl.visible = !ctrl.visible;
+        document.getElementById('btn-visibility').textContent = ctrl.visible ? '👁 MASQUER OVERLAY' : '👁 AFFICHER OVERLAY';
+        document.getElementById('btn-visibility').classList.toggle('active', !ctrl.visible);
+        break;
+      }
+      case 'setNames': {
+        if (payload.home) document.getElementById('ctrl-home-name').textContent = payload.home.toUpperCase();
+        if (payload.away) document.getElementById('ctrl-away-name').textContent = payload.away.toUpperCase();
+        break;
+      }
+    }
+  }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(ctrl.timerSeconds/60).toString().padStart(2,'0');
+    const s = (ctrl.timerSeconds%60).toString().padStart(2,'0');
+    document.getElementById('ctrl-timer').textContent = `${m}:${s}`;
+  }
+
+  function nextPeriodCtrl()       { send('period',{}); }
+  function toggleTimeoutCtrl()    { send('timeout',{}); }
+  function toggleVisibilityCtrl() { send('visibility',{}); }
+
+  function applyNames() {
+    const home = document.getElementById('input-home').value.trim() || 'DOMICILE';
+    const away = document.getElementById('input-away').value.trim() || 'EXTÉRIEUR';
+    send('setNames', { home, away });
+    document.getElementById('status-bar').innerHTML = `<span class="status-ok">✓ Noms appliqués — ${home} vs ${away}</span>`;
+  }
+
+  // Keyboard (mirrors overlay bindings, but applied locally + sent)
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    const shift = e.shiftKey;
+    switch(e.key) {
+      case ' ': e.preventDefault(); send('timer',{cmd: ctrl.timerRunning ? 'pause':'start'}); break;
+      case 'r': case 'R': send('timer',{cmd:'reset'}); break;
+      case 'p': case 'P': nextPeriodCtrl(); break;
+      case 'q': case 'Q': send('score',{team:'home',delta:shift?-1:1}); break;
+      case 'e': case 'E': send('score',{team:'away',delta:shift?-1:1}); break;
+      case 'z': case 'Z': send('goal',{}); break;
+      case 'v': case 'V': toggleVisibilityCtrl(); break;
+      case 't': case 'T': toggleTimeoutCtrl(); break;
+      case '1': send('sanction',{team:'home',type:'yellow',delta:shift?-1:1}); break;
+      case '2': send('sanction',{team:'home',type:'red',   delta:shift?-1:1}); break;
+      case '3': send('sanction',{team:'home',type:'blue',  delta:shift?-1:1}); break;
+      case '4': send('sanction',{team:'home',type:'white', delta:shift?-1:1}); break;
+      case '5': send('sanction',{team:'home',type:'min2',  delta:shift?-1:1}); break;
+      case '6': send('sanction',{team:'away',type:'yellow',delta:shift?-1:1}); break;
+      case '7': send('sanction',{team:'away',type:'red',   delta:shift?-1:1}); break;
+      case '8': send('sanction',{team:'away',type:'blue',  delta:shift?-1:1}); break;
+      case '9': send('sanction',{team:'away',type:'white', delta:shift?-1:1}); break;
+      case '0': send('sanction',{team:'away',type:'min2',  delta:shift?-1:1}); break;
+    }
+  });
+</script>
+</body>
+</html>
