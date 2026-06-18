@@ -31,7 +31,6 @@
 
   #scoreboard.hidden { opacity: 0; pointer-events: none; }
 
-  /* Team blocks */
   .team-block {
     display: flex;
     align-items: center;
@@ -54,7 +53,6 @@
     white-space: nowrap;
   }
 
-  /* Sanctions */
   .sanctions {
     display: flex;
     flex-direction: column;
@@ -96,7 +94,6 @@
     letter-spacing: 0.03em;
   }
 
-  /* Score center */
   #score-center {
     display: flex;
     align-items: center;
@@ -121,7 +118,6 @@
     padding-bottom: 4px;
   }
 
-  /* Time block */
   #time-block {
     display: flex;
     flex-direction: column;
@@ -252,12 +248,6 @@
 </head>
 <body>
 
-<!-- GOAL FLASH -->
-<div id="goal-flash">
-  <div id="goal-flash-label">BUT !</div>
-  <div id="goal-flash-team" id="goal-flash-team"></div>
-</div>
-
 <!-- TIMEOUT BANNER -->
 <div id="timeout-banner">
   <span id="timeout-label">TEMPS MORT</span>
@@ -270,38 +260,42 @@
 
 <!-- SCOREBOARD -->
 <div id="scoreboard">
-
-  <!-- Équipe Domicile -->
   <div class="team-block home">
     <div class="sanctions" id="sanctions-home"></div>
     <div class="team-name" id="team-home">DOMICILE</div>
   </div>
-
-  <!-- Score -->
   <div id="score-center">
     <span class="score-digit" id="score-home">0</span>
-    <span class="score-sep">:</span>
+    <div id="time-block">
+      <div id="time-display">00:00
+    </div>
+    <div id="period-display">1ère MT</div>
+  </div>
     <span class="score-digit" id="score-away">0</span>
   </div>
-
-  <!-- Équipe Visiteur -->
   <div class="team-block away">
     <div class="team-name" id="team-away">VISITEUR</div>
     <div class="sanctions" id="sanctions-away"></div>
   </div>
 
-  <!-- Temps -->
-  <div id="time-block">
-    <div id="time-display">00:00</div>
-    <div id="period-display">1ère MT</div>
-  </div>
-
 </div>
 
+<!-- ════════════════════════════════════════════
+     IMPORTANT : colle ici ta clé Ably Root Key
+     (la même que dans controle.html)
+     ════════════════════════════════════════════ -->
 <script>
+  // ⬇ REMPLACE cette valeur par ta clé Ably Root Key
+  const ABLY_KEY = 'U8jffA.4Jc0XA:fKGheyFk0tDH0cTdzF1lVLZk2pOa1X7Juo6V3Xf8ARc';
+</script>
+
+<!-- SDK Ably -->
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+<script>
+const CHANNEL_NAME = 'mhbtv-match';
+
 // ══════════════════════════════════════════
-//  ÉTAT LOCAL (miroir du serveur)
-//  Schéma identique à server.js
+//  ÉTAT LOCAL
 // ══════════════════════════════════════════
 let state = {
   homeName: 'DOMICILE',
@@ -316,7 +310,6 @@ let state = {
   visible: true,
 };
 
-// Timers locaux (UI uniquement, pas dans l'état serveur)
 let _timerInterval   = null;
 let _timeoutInterval = null;
 let _goalFlashTO     = null;
@@ -341,14 +334,12 @@ function renderSanctions(side) {
   const s  = side === 'home' ? state.homeSanctions : state.awaySanctions;
   const el = document.getElementById('sanctions-' + side);
   el.innerHTML = '';
-
   const row1 = document.createElement('div');
   row1.className = 'sanction-row';
   for (let i = 0; i < s.yellow; i++) row1.appendChild(makeCard('yellow', 'J'));
   for (let i = 0; i < s.red;    i++) row1.appendChild(makeCard('red',    'R'));
   for (let i = 0; i < s.blue;   i++) row1.appendChild(makeCard('blue',   'B'));
   for (let i = 0; i < s.white;  i++) row1.appendChild(makeCard('white',  'D'));
-
   const row2 = document.createElement('div');
   row2.className = 'sanction-row';
   for (let i = 0; i < s.min2; i++) {
@@ -401,7 +392,6 @@ function stopLocalTimer() {
 
 function applyTimerState() {
   stopLocalTimer();
-  // Recalcule les secondes en tenant compte du temps écoulé depuis lastSync
   if (state.timer.running) {
     const elapsed = Math.floor((Date.now() - state.timer.lastSync) / 1000);
     state.timer.seconds += state.timer.direction === 'up' ? elapsed : -elapsed;
@@ -454,19 +444,15 @@ function endTimeoutBanner() {
 }
 
 // ══════════════════════════════════════════
-//  APPLICATION D'UN MESSAGE SSE
+//  APPLICATION D'UN MESSAGE ABLY
 // ══════════════════════════════════════════
 function applyMessage(msg) {
   switch (msg.type) {
-
-    // ── Resynchronisation complète (connexion initiale ou reconnexion) ──
     case 'state':
       state = msg.state;
       applyTimerState();
       render();
       break;
-
-    // ── Scores ──
     case 'score_home_inc':
       state.homeScore++;
       showGoalFlash(state.homeName);
@@ -483,14 +469,10 @@ function applyMessage(msg) {
     case 'score_away_dec':
       state.awayScore = Math.max(0, state.awayScore - 1);
       render(); break;
-
-    // ── Équipes ──
     case 'set_teams':
       state.homeName = msg.homeName;
       state.awayName = msg.awayName;
       render(); break;
-
-    // ── Chrono ──
     case 'timer_start':
       state.timer.running   = true;
       state.timer.seconds   = msg.seconds;
@@ -508,16 +490,12 @@ function applyMessage(msg) {
       state.timer.direction = msg.direction;
       stopLocalTimer();
       updateTimerDisplay(); break;
-
-    // ── Sanctions ──
     case 'sanction': {
       const sanctions = msg.side === 'home' ? state.homeSanctions : state.awaySanctions;
       sanctions[msg.stype]++;
       showTicker(msg.label);
       render(); break;
     }
-
-    // ── Temps mort ──
     case 'timeout_start':
       state.timeoutActive = true;
       startTimeoutBanner(msg.teamName);
@@ -525,19 +503,13 @@ function applyMessage(msg) {
     case 'timeout_end':
       state.timeoutActive = false;
       endTimeoutBanner(); break;
-
-    // ── Période ──
     case 'period_next':
       state.period = state.period >= 3 ? 1 : state.period + 1;
       render();
       showTicker('🕐 ' + (['','1ère mi-temps','2ème mi-temps','Prolongation'])[state.period]); break;
-
-    // ── Visibilité ──
     case 'toggle_overlay':
       state.visible = !state.visible;
       render(); break;
-
-    // ── Reset complet ──
     case 'full_reset':
       state = msg.state;
       stopLocalTimer();
@@ -547,30 +519,29 @@ function applyMessage(msg) {
 }
 
 // ══════════════════════════════════════════
-//  CONNEXION SSE AU SERVEUR
+//  CONNEXION ABLY
 // ══════════════════════════════════════════
-let _sse = null;
+function connectAbly() {
+  if (!ABLY_KEY || ABLY_KEY === 'U8jffA.4Jc0XA:fKGheyFk0tDH0cTdzF1lVLZk2pOa1X7Juo6V3Xf8ARc') {
+    console.warn('[Overlay] Clé Ably manquante — modifie la variable ABLY_KEY dans ce fichier');
+    return;
+  }
 
-function connectSSE() {
-  if (_sse) _sse.close();
-  _sse = new EventSource('/events');
+  const client  = new Ably.Realtime({ key: ABLY_KEY, clientId: 'overlay' });
+  const channel = client.channels.get(CHANNEL_NAME);
 
-  _sse.onopen = () => console.log('[Overlay] SSE connecté');
+  client.connection.on('connected', () => console.log('[Overlay] Connecté à Ably'));
+  client.connection.on('disconnected', () => console.warn('[Overlay] Déconnecté — reconnexion automatique'));
 
-  _sse.onmessage = (e) => {
-    try { applyMessage(JSON.parse(e.data)); }
-    catch (err) { console.warn('[Overlay] message SSE invalide', err); }
-  };
-
-  _sse.onerror = () => {
-    console.warn('[Overlay] SSE déconnecté — reconnexion dans 3s');
-    _sse.close();
-    setTimeout(connectSSE, 3000);
-  };
+  channel.subscribe((msg) => {
+    if (msg.clientId === 'overlay') return; // ignore ses propres messages (cas rare)
+    try { applyMessage(msg.data); }
+    catch (err) { console.warn('[Overlay] Message invalide', err); }
+  });
 }
 
 // Init
-connectSSE();
+connectAbly();
 </script>
 </body>
 </html>
