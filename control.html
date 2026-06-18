@@ -74,6 +74,64 @@
     margin: 0 auto;
   }
 
+  /* ── CLÉ API ── */
+  #api-setup {
+    grid-column: 1 / -1;
+    background: #1a1200;
+    border: 1px solid #4a3800;
+    border-radius: 6px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  #api-setup label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #F5C518;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  #api-key-input {
+    flex: 1;
+    min-width: 260px;
+    background: #0d0d00;
+    border: 1px solid #4a3800;
+    border-radius: 4px;
+    color: #F5C518;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+  }
+  #api-key-input:focus { border-color: #F5C518; }
+
+  #btn-save-key {
+    background: #F5C518;
+    border: none;
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #btn-save-key:hover { background: #d4a800; }
+
+  #api-hint {
+    font-size: 11px;
+    color: #888;
+    width: 100%;
+  }
+  #api-hint a { color: #F5C518; }
+
   /* ── TEAM SETUP ── */
   #team-setup {
     grid-column: 1 / -1;
@@ -196,7 +254,6 @@
     line-height: 1;
   }
 
-  /* SHORTCUT LABEL */
   .shortcut-hint {
     display: inline-block;
     background: var(--surface2);
@@ -311,8 +368,6 @@
     gap: 12px;
     margin-top: 4px;
   }
-
-  .sanction-col { }
 
   .sanction-col-title {
     font-family: 'Barlow Condensed', sans-serif;
@@ -496,7 +551,6 @@
     display: flex;
     flex-direction: column-reverse;
     gap: 4px;
-    margin-top: 8px;
   }
 
   .log-entry {
@@ -517,11 +571,22 @@
 <header>
   <div class="logo">MHB<span>TV</span></div>
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;">Panneau de contrôle</div>
-  <div class="status-dot live" id="status-dot"></div>
-  <div class="status-label" id="status-label">EN DIRECT</div>
+  <div class="status-dot" id="status-dot"></div>
+  <div class="status-label" id="status-label">DÉCONNECTÉ</div>
 </header>
 
 <main>
+
+  <!-- CLÉ API ABLY -->
+  <div id="api-setup">
+    <label>🔑 Clé Ably</label>
+    <input id="api-key-input" type="text" placeholder="xxxxxx.xxxxxx:xxxxxxxxxxxxxxxx" spellcheck="false">
+    <button id="btn-save-key">Connecter</button>
+    <div id="api-hint">
+      Crée un compte gratuit sur <a href="https://ably.com" target="_blank">ably.com</a> → Apps → Create App → colle ici la clé "API Key" (Root).
+      La même clé doit être collée dans <strong>overlay.html</strong>.
+    </div>
+  </div>
 
   <!-- NOMS DES ÉQUIPES -->
   <div id="team-setup">
@@ -604,7 +669,7 @@
             <span class="count-badge" id="cnt-home-blue">0</span>
           </button>
           <button class="btn-sanction" data-side="home" data-type="white">
-            <div class="card-dot white"></div> Disqualification
+            <div class="card-dot white"></div> Carton blanc
             <span class="shortcut-hint">4</span>
             <span class="count-badge" id="cnt-home-white">0</span>
           </button>
@@ -634,7 +699,7 @@
             <span class="count-badge" id="cnt-away-blue">0</span>
           </button>
           <button class="btn-sanction" data-side="away" data-type="white">
-            <div class="card-dot white"></div> Disqualification
+            <div class="card-dot white"></div> Carton blanc
             <span class="shortcut-hint">⇧+4</span>
             <span class="count-badge" id="cnt-away-white">0</span>
           </button>
@@ -679,8 +744,8 @@
       <div class="kb-row"><span class="kb-key">⇧+2</span><span class="kb-desc">Carton rouge VIS</span></div>
       <div class="kb-row"><span class="kb-key">3</span><span class="kb-desc">Carton bleu DOM</span></div>
       <div class="kb-row"><span class="kb-key">⇧+3</span><span class="kb-desc">Carton bleu VIS</span></div>
-      <div class="kb-row"><span class="kb-key">4</span><span class="kb-desc">Disqualification DOM</span></div>
-      <div class="kb-row"><span class="kb-key">⇧+4</span><span class="kb-desc">Disqualification VIS</span></div>
+      <div class="kb-row"><span class="kb-key">4</span><span class="kb-desc">Carton blanc DOM</span></div>
+      <div class="kb-row"><span class="kb-key">⇧+4</span><span class="kb-desc">Carton blanc VIS</span></div>
       <div class="kb-row"><span class="kb-key">5</span><span class="kb-desc">2 min DOM</span></div>
       <div class="kb-row"><span class="kb-key">⇧+5</span><span class="kb-desc">2 min VIS</span></div>
       <div class="kb-row"><span class="kb-key">T</span><span class="kb-desc">Temps mort DOM</span></div>
@@ -697,9 +762,20 @@
 
 </main>
 
+<!-- SDK Ably (chargé depuis CDN, pas d'installation) -->
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
 <script>
 // ══════════════════════════════════════════
-//  ÉTAT LOCAL — miroir du serveur (server.js)
+//  CONFIG ABLY
+//  Le canal "mhbtv-match" relie ce panneau
+//  à l'overlay. Toujours le même nom.
+// ══════════════════════════════════════════
+const CHANNEL_NAME = 'mhbtv-match';
+let ablyClient  = null;
+let ablyChannel = null;
+
+// ══════════════════════════════════════════
+//  ÉTAT LOCAL
 // ══════════════════════════════════════════
 let local = {
   homeName: 'DOMICILE',
@@ -714,77 +790,79 @@ let local = {
   visible: true,
 };
 
-const PERIOD_LABELS = { 1: '1ère mi-temps', 2: '2ème mi-temps', 3: 'Prolongation' };
-const SANCTION_LABELS = { yellow: 'Carton jaune', red: 'Carton rouge', blue: 'Carton bleu', white: 'Disqualification', min2: 'Suspension 2 min' };
+const PERIOD_LABELS   = { 1: '1ère mi-temps', 2: '2ème mi-temps', 3: 'Prolongation' };
+const SANCTION_LABELS = { yellow: 'Carton jaune', red: 'Carton rouge', blue: 'Carton bleu', white: 'Disqualification', susp2: 'Suspension 2 min' };
+const TYPE_MAP        = { yellow:'yellow', red:'red', blue:'blue', white:'white', susp2:'min2' };
 
 let _timerInterval = null;
 
 // ══════════════════════════════════════════
-//  COMMUNICATION SERVEUR
+//  CONNEXION ABLY
 // ══════════════════════════════════════════
-async function post(msg) {
-  // On met à jour l'état complet avant d'envoyer (server.js attend { type, state })
-  try {
-    await fetch('/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...msg, state: local }),
-    });
-  } catch (e) {
-    setConnected(false);
-    console.warn('[Contrôle] Erreur POST', e);
-  }
+function connectAbly(apiKey) {
+  if (ablyClient) { try { ablyClient.close(); } catch(e){} }
+
+  ablyClient  = new Ably.Realtime({ key: apiKey, clientId: 'control' });
+  ablyChannel = ablyClient.channels.get(CHANNEL_NAME);
+
+  ablyClient.connection.on('connected', () => {
+    setConnected(true);
+    log('🟢 Connecté à Ably');
+    // Envoie l'état complet dès la connexion pour synchroniser l'overlay
+    publish({ type: 'state', state: local });
+  });
+
+  ablyClient.connection.on('disconnected', () => { setConnected(false); log('🔴 Déconnecté'); });
+  ablyClient.connection.on('failed',       () => { setConnected(false); log('❌ Connexion échouée — vérifie ta clé Ably'); });
+
+  // Écoute les messages entrants (utile si un 2e panneau est ouvert)
+  ablyChannel.subscribe((msg) => {
+    if (msg.clientId === 'control') return; // ignore nos propres messages
+    if (msg.data && msg.data.type === 'state') {
+      local = msg.data.state;
+      applyTimerState();
+      renderLocal();
+      document.getElementById('input-home').value = local.homeName;
+      document.getElementById('input-away').value = local.awayName;
+    }
+  });
 }
 
 // ══════════════════════════════════════════
-//  CONNEXION SSE (pour rester en sync si
-//  plusieurs panneaux de contrôle ouverts)
+//  PUBLICATION D'UN MESSAGE
 // ══════════════════════════════════════════
-let _sse = null;
+function publish(msg) {
+  if (!ablyChannel) { log('⚠ Pas connecté — colle ta clé Ably et clique Connecter'); return; }
+  ablyChannel.publish('update', msg, (err) => {
+    if (err) { log('❌ Erreur envoi : ' + err.message); setConnected(false); }
+  });
+}
 
+// Raccourci : publie un message ET met à jour l'état complet en même temps
+function send(msg) {
+  publish({ ...msg, state: local });
+}
+
+// ══════════════════════════════════════════
+//  UI CONNEXION
+// ══════════════════════════════════════════
 function setConnected(ok) {
   document.getElementById('status-dot').classList.toggle('live', ok);
   document.getElementById('status-label').textContent = ok ? 'EN DIRECT' : 'DÉCONNECTÉ';
 }
 
-function connectSSE() {
-  if (_sse) _sse.close();
-  _sse = new EventSource('/events');
+document.getElementById('btn-save-key').addEventListener('click', () => {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return;
+  localStorage.setItem('mhbtv_ably_key', key);
+  connectAbly(key);
+});
 
-  _sse.onopen = () => { setConnected(true); log('🟢 Connecté au serveur'); };
-
-  _sse.onmessage = (e) => {
-    try {
-      const msg = JSON.parse(e.data);
-      if (msg.type === 'state' && msg.state) {
-        local = msg.state;
-        applyTimerState();
-        renderLocal();
-        // Pré-remplir les champs équipes si le serveur a déjà des noms
-        document.getElementById('input-home').value = local.homeName;
-        document.getElementById('input-away').value = local.awayName;
-      }
-    } catch (err) { console.warn('[Contrôle] SSE invalide', err); }
-  };
-
-  _sse.onerror = () => {
-    setConnected(false);
-    _sse.close();
-    setTimeout(connectSSE, 3000);
-  };
-}
-
-// ══════════════════════════════════════════
-//  LOG
-// ══════════════════════════════════════════
-function log(msg) {
-  const now = new Date();
-  const t = [now.getHours(), now.getMinutes(), now.getSeconds()]
-    .map(n => String(n).padStart(2,'0')).join(':');
-  const el = document.createElement('div');
-  el.className = 'log-entry';
-  el.innerHTML = `<span class="log-time">${t}</span><span class="log-msg">${msg}</span>`;
-  document.getElementById('log-list').prepend(el);
+// Recharge la clé sauvegardée si elle existe
+const savedKey = localStorage.getItem('mhbtv_ably_key');
+if (savedKey) {
+  document.getElementById('api-key-input').value = savedKey;
+  connectAbly(savedKey);
 }
 
 // ══════════════════════════════════════════
@@ -793,14 +871,12 @@ function log(msg) {
 function renderLocal() {
   document.getElementById('disp-sh').textContent = local.homeScore;
   document.getElementById('disp-sa').textContent = local.awayScore;
-  document.getElementById('label-home-score').textContent = local.homeName;
-  document.getElementById('label-away-score').textContent = local.awayName;
+  document.getElementById('label-home-score').textContent   = local.homeName;
+  document.getElementById('label-away-score').textContent   = local.awayName;
   document.getElementById('sanction-home-title').textContent = local.homeName;
   document.getElementById('sanction-away-title').textContent = local.awayName;
-  document.getElementById('period-label').textContent = PERIOD_LABELS[local.period] || '';
+  document.getElementById('period-label').textContent        = PERIOD_LABELS[local.period] || '';
 
-  // Compteurs sanctions (les boutons HTML utilisent data-type="yellow/red/blue/white/susp2"
-  // mais le serveur utilise min2 → on mappe)
   const typeMap = { yellow:'yellow', red:'red', blue:'blue', white:'white', susp2:'min2' };
   ['home','away'].forEach(side => {
     const s = side === 'home' ? local.homeSanctions : local.awaySanctions;
@@ -810,7 +886,6 @@ function renderLocal() {
     });
   });
 
-  // Bouton start/stop
   document.getElementById('btn-startstop').textContent = local.timer.running ? '⏸ STOP' : '▶ START';
   document.getElementById('btn-startstop').classList.toggle('running', local.timer.running);
 }
@@ -826,15 +901,15 @@ function updateChronoDisplay() {
 }
 
 // ══════════════════════════════════════════
-//  TIMER LOCAL (affichage panneau)
+//  TIMER LOCAL
 // ══════════════════════════════════════════
 function applyTimerState() {
   clearInterval(_timerInterval);
   _timerInterval = null;
   if (local.timer.running) {
     const elapsed = Math.floor((Date.now() - local.timer.lastSync) / 1000);
-    local.timer.seconds += local.timer.direction === 'up' ? elapsed : -elapsed;
-    local.timer.lastSync = Date.now();
+    local.timer.seconds  += local.timer.direction === 'up' ? elapsed : -elapsed;
+    local.timer.lastSync  = Date.now();
     _timerInterval = setInterval(() => {
       local.timer.seconds += local.timer.direction === 'up' ? 1 : -1;
       updateChronoDisplay();
@@ -849,7 +924,7 @@ function startTimer() {
   local.timer.lastSync = Date.now();
   applyTimerState();
   renderLocal();
-  post({ type: 'timer_start', seconds: local.timer.seconds, direction: local.timer.direction });
+  send({ type: 'timer_start', seconds: local.timer.seconds, direction: local.timer.direction });
   log('▶ Chronomètre démarré');
 }
 
@@ -860,7 +935,7 @@ function stopTimer() {
   _timerInterval = null;
   renderLocal();
   updateChronoDisplay();
-  post({ type: 'timer_stop', seconds: local.timer.seconds });
+  send({ type: 'timer_stop', seconds: local.timer.seconds });
   log('⏸ Chronomètre arrêté');
 }
 
@@ -873,21 +948,18 @@ function resetTimer(value, direction) {
   _timerInterval = null;
   renderLocal();
   updateChronoDisplay();
-  post({ type: 'timer_reset', seconds: value, direction });
+  send({ type: 'timer_reset', seconds: value, direction });
   log('⟳ Reset chrono → ' + formatTime(value));
 }
 
 // ══════════════════════════════════════════
-//  ACTION GÉNÉRIQUE (modifie local + envoie)
+//  ACTIONS
 // ══════════════════════════════════════════
-// typeMap : data-type HTML → clé serveur
-const TYPE_MAP = { yellow:'yellow', red:'red', blue:'blue', white:'white', susp2:'min2' };
-
 function doScoreInc(side) {
   if (side === 'home') local.homeScore++;
   else                 local.awayScore++;
   renderLocal();
-  post({ type: side === 'home' ? 'score_home_inc' : 'score_away_inc' });
+  send({ type: side === 'home' ? 'score_home_inc' : 'score_away_inc' });
   log(`⚽ BUT ${side === 'home' ? local.homeName : local.awayName} → ${local.homeScore}:${local.awayScore}`);
 }
 
@@ -895,7 +967,7 @@ function doScoreDec(side) {
   if (side === 'home' && local.homeScore > 0) local.homeScore--;
   else if (side === 'away' && local.awayScore > 0) local.awayScore--;
   renderLocal();
-  post({ type: side === 'home' ? 'score_home_dec' : 'score_away_dec' });
+  send({ type: side === 'home' ? 'score_home_dec' : 'score_away_dec' });
   log(`↩ Annulation but ${side === 'home' ? local.homeName : local.awayName}`);
 }
 
@@ -906,27 +978,27 @@ function doSanction(side, htmlType) {
   const teamName = side === 'home' ? local.homeName : local.awayName;
   const label    = SANCTION_LABELS[htmlType] + ' – ' + teamName;
   renderLocal();
-  post({ type: 'sanction', side, stype: skey, label });
+  send({ type: 'sanction', side, stype: skey, label });
   log('🟥 ' + label);
 }
 
 function doPeriodNext() {
   local.period = local.period >= 3 ? 1 : local.period + 1;
   renderLocal();
-  post({ type: 'period_next' });
+  send({ type: 'period_next' });
   log(`🕐 Période → ${PERIOD_LABELS[local.period]}`);
 }
 
 function doTimeout(side) {
   const teamName = side === 'home' ? local.homeName : local.awayName;
   local.timeoutActive = true;
-  post({ type: 'timeout_start', teamName });
+  send({ type: 'timeout_start', teamName });
   log(`⏸ Temps mort ${teamName}`);
 }
 
 function doToggleOverlay() {
   local.visible = !local.visible;
-  post({ type: 'toggle_overlay' });
+  send({ type: 'toggle_overlay' });
   log('👁 Overlay ' + (local.visible ? 'affiché' : 'masqué'));
 }
 
@@ -948,7 +1020,7 @@ function doFullReset() {
   };
   renderLocal();
   updateChronoDisplay();
-  post({ type: 'full_reset', state: local });
+  send({ type: 'full_reset', state: local });
   log('⟳ Réinitialisation complète');
 }
 
@@ -959,7 +1031,7 @@ document.getElementById('btn-teams').addEventListener('click', () => {
   local.homeName = document.getElementById('input-home').value.toUpperCase() || 'DOMICILE';
   local.awayName = document.getElementById('input-away').value.toUpperCase() || 'EXTÉRIEUR';
   renderLocal();
-  post({ type: 'set_teams', homeName: local.homeName, awayName: local.awayName });
+  send({ type: 'set_teams', homeName: local.homeName, awayName: local.awayName });
   log(`✏ Équipes → ${local.homeName} vs ${local.awayName}`);
 });
 
@@ -1014,8 +1086,6 @@ document.addEventListener('keydown', (e) => {
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-setConnected(false);
-connectSSE();  // récupère l'état serveur au démarrage
 renderLocal();
 updateChronoDisplay();
 </script>
