@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MHBTV – Match Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:      #C8001E;
+    --red-dark: #8f0015;
+    --bg:       #0D0D0D;
+    --surface:  #1A1A1A;
+    --surface2: #242424;
+    --border:   #2E2E2E;
+    --text:     #F0F0F0;
+    --muted:    #888;
+    --yellow:   #F5C518;
+    --blue:     #1565C0;
+    --green:    #2E7D32;
+    --white-c:  #E0E0E0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--red);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: var(--red);
+    text-transform: uppercase;
+  }
+
+  .logo span { color: var(--text); }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #444;
+    margin-left: auto;
+  }
+  .status-dot.live { background: var(--red); box-shadow: 0 0 6px var(--red); animation: pulse 1.2s infinite; }
+
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+
+  .status-label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; }
+
+  /* ── LAYOUT ── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 12px;
+    padding: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── TEAM SETUP ── */
+  #team-setup {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+  }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .team-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .team-input-group { flex: 1; }
+
+  .team-input-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+
+  .team-input-group input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    outline: none;
+    letter-spacing: 0.04em;
+    transition: border-color 0.2s;
+  }
+
+  .team-input-group input:focus { border-color: var(--red); }
+
+  .btn-apply {
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    align-self: flex-end;
+    transition: background 0.15s;
+  }
+  .btn-apply:hover { background: var(--red-dark); }
+
+  /* ── SCORE PANEL ── */
+  .score-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+  }
+
+  .score-panel .team-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+
+  .score-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .btn-score {
+    width: 52px; height: 52px;
+    border-radius: 4px;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.08s, filter 0.1s;
+  }
+  .btn-score:active { transform: scale(0.93); }
+
+  .btn-score.plus  { background: var(--red); color: #fff; }
+  .btn-score.minus { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+  .score-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--text);
+    min-width: 48px;
+    text-align: center;
+    line-height: 1;
+  }
+
+  /* SHORTCUT LABEL */
+  .shortcut-hint {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 1px 5px;
+    letter-spacing: 0.04em;
+    margin-left: 4px;
+    font-family: monospace;
+  }
+
+  /* ── CHRONO ── */
+  #chrono-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  #chrono-display {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 52px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    min-width: 130px;
+  }
+
+  .chrono-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-chrono {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn-chrono:hover { background: #2a2a2a; border-color: #555; }
+
+  #btn-startstop {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+    font-size: 16px;
+    padding: 10px 28px;
+  }
+  #btn-startstop.running {
+    background: var(--red);
+    border-color: var(--red);
+  }
+
+  .period-block {
+    margin-left: auto;
+    text-align: center;
+  }
+
+  #period-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .btn-period {
+    margin-top: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .btn-period:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── SANCTIONS ── */
+  #sanctions-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+  }
+
+  .sanction-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .sanction-col { }
+
+  .sanction-col-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .sanction-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .btn-sanction {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.12s;
+    text-align: left;
+  }
+  .btn-sanction:hover { background: #2a2a2a; }
+
+  .card-dot {
+    width: 16px; height: 22px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .card-dot.yellow { background: #F5C518; }
+  .card-dot.red    { background: #E02020; }
+  .card-dot.blue   { background: #1565C0; }
+  .card-dot.white  { background: #E0E0E0; border: 1px solid #999; }
+  .card-dot.susp   { background: rgba(230,60,60,0.8); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+  .count-badge {
+    margin-left: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    padding: 1px 7px;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  /* ── TIMEOUT ── */
+  #timeout-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-timeout {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-timeout:hover { background: #333; border-color: #666; }
+
+  /* ── OVERLAY ACTIONS ── */
+  #overlay-panel {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-overlay {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .btn-overlay:hover { border-color: var(--red); color: var(--red); }
+
+  #btn-open-obs {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+  #btn-open-obs:hover { background: var(--red-dark); }
+
+  .btn-reset-all {
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    color: #555;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .btn-reset-all:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── KEYBOARD MAP ── */
+  #kb-map {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+  }
+
+  .kb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px 20px;
+    margin-top: 8px;
+  }
+
+  .kb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 3px 0;
+    border-bottom: 1px solid #1f1f1f;
+  }
+
+  .kb-key {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    padding: 2px 7px;
+    font-family: monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .kb-desc { flex: 1; }
+
+  /* ── LOG ── */
+  #log-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  #log-list {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .log-entry {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 3px 0;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    gap: 10px;
+  }
+
+  .log-time { color: #444; flex-shrink: 0; font-family: monospace; }
+  .log-msg  { color: var(--text); }
+
+  /* ════════════════════════════════════════════════
+     APERÇU OVERLAY (bas de page)
+     Reproduction exacte du rendu qui sera incrusté
+     ════════════════════════════════════════════════ */
+  #preview-section {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px 20px;
+  }
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .preview-hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Cadre de l'aperçu : damier pour visualiser la transparence */
+  #preview-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1920 / 1080;
+    background-image:
+      linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+      linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+    background-color: #1a1a1a;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  /* Conteneur mis à l'échelle en 1920×1080, réduit via transform pour
+     correspondre exactement au rendu final OBS */
+  #ob-stage {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: top left;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  /* ── Styles du scoreboard, identiques à l'overlay OBS ── */
+  #ob-stage #scoreboard {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: stretch;
+    height: 72px;
+    filter: drop-shadow(0 4px 18px rgba(0,0,0,0.55));
+    transition: opacity 0.3s ease;
+  }
+  #ob-stage #scoreboard.hidden { opacity: 0; }
+
+  #ob-stage .team-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 22px;
+    background: rgba(10, 10, 10, 0.92);
+    min-width: 220px;
+  }
+  #ob-stage .team-block.away { flex-direction: row-reverse; }
+
+  #ob-stage .team-name {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  #ob-stage .sanctions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+  }
+  #ob-stage .sanction-row { display: flex; gap: 4px; align-items: center; }
+
+  #ob-stage .card {
+    width: 14px; height: 18px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  #ob-stage .card.yellow { background: #F5C518; }
+  #ob-stage .card.red    { background: #E02020; color: #fff; }
+  #ob-stage .card.blue   { background: #1565C0; color: #fff; }
+  #ob-stage .card.white  { background: #FFFFFF; border: 1px solid #888; }
+
+  #ob-stage .suspension-badge {
+    background: rgba(230,60,60,0.9);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.03em;
+  }
+
+  #ob-stage #score-center {
+    display: flex;
+    align-items: center;
+    background: #C8001E;
+    padding: 0 4px;
+  }
+  #ob-stage .score-digit {
+    font-size: 52px;
+    font-weight: 900;
+    color: #FFFFFF;
+    line-height: 1;
+    padding: 0 18px;
+    letter-spacing: -0.01em;
+  }
+  #ob-stage .score-sep {
+    font-size: 40px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    line-height: 1;
+    padding-bottom: 4px;
+  }
+
+  #ob-stage #time-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,10,0.92);
+    padding: 0 20px;
+    min-width: 90px;
+    border-left: 2px solid #C8001E;
+  }
+  #ob-stage #time-display {
+    font-size: 26px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+  #ob-stage #period-display {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 3px;
+  }
+
+  #ob-stage #timeout-banner {
+    position: absolute;
+    top: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,10,0.92);
+    border-left: 4px solid #C8001E;
+    padding: 10px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  }
+  #ob-stage #timeout-banner.visible { opacity: 1; }
+  #ob-stage #timeout-label {
+    font-size: 18px; font-weight: 900; color: #C8001E;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #ob-stage #timeout-team { font-size: 18px; font-weight: 600; color: #FFFFFF; letter-spacing: 0.04em; }
+  #ob-stage #timeout-timer { font-size: 18px; font-weight: 700; color: #FFFFFF; margin-left: 8px; }
+
+  #ob-stage #goal-flash {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(10,10,10,0.92);
+    border: 2px solid #C8001E;
+    padding: 22px 56px;
+    text-align: center;
+    opacity: 0;
+    filter: drop-shadow(0 6px 24px rgba(0,0,0,0.7));
+    transition: opacity 0.25s ease;
+  }
+  #ob-stage #goal-flash.show { opacity: 1; }
+  #ob-stage #goal-flash-label {
+    font-size: 52px; font-weight: 900; color: #C8001E;
+    text-transform: uppercase; letter-spacing: 0.12em; line-height: 1;
+  }
+  #ob-stage #goal-flash-team {
+    font-size: 22px; font-weight: 600; color: rgba(255,255,255,0.8);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px;
+  }
+
+  #ob-stage #event-ticker {
+    position: absolute;
+    bottom: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,10,0.88);
+    border-left: 3px solid #C8001E;
+    padding: 7px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  #ob-stage #event-ticker.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MHB<span>TV</span></div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;">Match Control</div>
+  <div class="status-dot live" id="status-dot"></div>
+  <div class="status-label" id="status-label">LOCAL</div>
+</header>
+
+<main>
+
+  <!-- NOMS DES ÉQUIPES -->
+  <div id="team-setup">
+    <div class="section-title">Équipes</div>
+    <div class="team-inputs">
+      <div class="team-input-group">
+        <label>Domicile</label>
+        <input id="input-home" type="text" value="DOMICILE" maxlength="20">
+      </div>
+      <div class="team-input-group">
+        <label>Visiteur</label>
+        <input id="input-away" type="text" value="EXTÉRIEUR" maxlength="20">
+      </div>
+      <button class="btn-apply" id="btn-teams">Appliquer</button>
+    </div>
+  </div>
+
+  <!-- SCORE DOMICILE -->
+  <div class="score-panel">
+    <div class="team-label" id="label-home-score">Domicile</div>
+    <div class="score-ctrl">
+      <button class="btn-score plus"  id="btn-sh-plus">+</button>
+      <div class="score-val" id="disp-sh">0</div>
+      <button class="btn-score minus" id="btn-sh-minus">−</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);">
+      But <span class="shortcut-hint">Q</span>
+      &nbsp;|&nbsp; Annuler <span class="shortcut-hint">A</span>
+    </div>
+  </div>
+
+  <!-- SCORE VISITEUR -->
+  <div class="score-panel">
+    <div class="team-label" id="label-away-score">Visiteur</div>
+    <div class="score-ctrl">
+      <button class="btn-score plus"  id="btn-sa-plus">+</button>
+      <div class="score-val" id="disp-sa">0</div>
+      <button class="btn-score minus" id="btn-sa-minus">−</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);">
+      But <span class="shortcut-hint">E</span>
+      &nbsp;|&nbsp; Annuler <span class="shortcut-hint">D</span>
+    </div>
+  </div>
+
+  <!-- CHRONO -->
+  <div id="chrono-panel">
+    <div id="chrono-display">00:00</div>
+    <div class="chrono-btns">
+      <button class="btn-chrono" id="btn-startstop">▶ START</button>
+      <button class="btn-chrono" id="btn-reset0">Reset 0:00</button>
+      <button class="btn-chrono" id="btn-reset30">Reset 30:00 ↓</button>
+    </div>
+    <div class="period-block">
+      <div id="period-label">1ère mi-temps</div>
+      <button class="btn-period" id="btn-period">Période suivante <span class="shortcut-hint">P</span></button>
+    </div>
+  </div>
+
+  <!-- SANCTIONS -->
+  <div id="sanctions-panel">
+    <div class="section-title">Sanctions</div>
+    <div class="sanction-grid">
+      <div class="sanction-col">
+        <div class="sanction-col-title" id="sanction-home-title">Domicile</div>
+        <div class="sanction-buttons">
+          <button class="btn-sanction" data-side="home" data-type="yellow">
+            <div class="card-dot yellow"></div> Carton jaune
+            <span class="shortcut-hint">1</span>
+            <span class="count-badge" id="cnt-home-yellow">0</span>
+          </button>
+          <button class="btn-sanction" data-side="home" data-type="red">
+            <div class="card-dot red"></div> Carton rouge
+            <span class="shortcut-hint">2</span>
+            <span class="count-badge" id="cnt-home-red">0</span>
+          </button>
+          <button class="btn-sanction" data-side="home" data-type="blue">
+            <div class="card-dot blue"></div> Carton bleu
+            <span class="shortcut-hint">3</span>
+            <span class="count-badge" id="cnt-home-blue">0</span>
+          </button>
+          <button class="btn-sanction" data-side="home" data-type="white">
+            <div class="card-dot white"></div> Disqualification
+            <span class="shortcut-hint">4</span>
+            <span class="count-badge" id="cnt-home-white">0</span>
+          </button>
+          <button class="btn-sanction" data-side="home" data-type="susp2">
+            <div class="card-dot susp">2'</div> Suspension 2 min
+            <span class="shortcut-hint">5</span>
+            <span class="count-badge" id="cnt-home-susp2">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="sanction-col">
+        <div class="sanction-col-title" id="sanction-away-title">Visiteur</div>
+        <div class="sanction-buttons">
+          <button class="btn-sanction" data-side="away" data-type="yellow">
+            <div class="card-dot yellow"></div> Carton jaune
+            <span class="shortcut-hint">⇧+1</span>
+            <span class="count-badge" id="cnt-away-yellow">0</span>
+          </button>
+          <button class="btn-sanction" data-side="away" data-type="red">
+            <div class="card-dot red"></div> Carton rouge
+            <span class="shortcut-hint">⇧+2</span>
+            <span class="count-badge" id="cnt-away-red">0</span>
+          </button>
+          <button class="btn-sanction" data-side="away" data-type="blue">
+            <div class="card-dot blue"></div> Carton bleu
+            <span class="shortcut-hint">⇧+3</span>
+            <span class="count-badge" id="cnt-away-blue">0</span>
+          </button>
+          <button class="btn-sanction" data-side="away" data-type="white">
+            <div class="card-dot white"></div> Disqualification
+            <span class="shortcut-hint">⇧+4</span>
+            <span class="count-badge" id="cnt-away-white">0</span>
+          </button>
+          <button class="btn-sanction" data-side="away" data-type="susp2">
+            <div class="card-dot susp">2'</div> Suspension 2 min
+            <span class="shortcut-hint">⇧+5</span>
+            <span class="count-badge" id="cnt-away-susp2">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPS MORT -->
+  <div id="timeout-panel">
+    <div class="section-title" style="margin-bottom:0;margin-right:8px;">Temps mort</div>
+    <button class="btn-timeout" id="btn-to-home">⏸ Domicile <span class="shortcut-hint">T</span></button>
+    <button class="btn-timeout" id="btn-to-away">⏸ Visiteur <span class="shortcut-hint">Y</span></button>
+  </div>
+
+  <!-- ACTIONS OVERLAY + RESET -->
+  <div id="overlay-panel">
+    <button class="btn-overlay" id="btn-toggle-overlay">👁 Afficher / Masquer score <span class="shortcut-hint">H</span></button>
+    <button class="btn-overlay" id="btn-open-obs">⛶ Ouvrir l'overlay pour OBS</button>
+    <button class="btn-reset-all" id="btn-reset-all">⟳ Réinitialiser tout</button>
+  </div>
+
+  <!-- RACCOURCIS -->
+  <div id="kb-map">
+    <div class="section-title">Raccourcis clavier</div>
+    <div class="kb-grid">
+      <div class="kb-row"><span class="kb-key">Q</span><span class="kb-desc">But domicile</span></div>
+      <div class="kb-row"><span class="kb-key">E</span><span class="kb-desc">But visiteur</span></div>
+      <div class="kb-row"><span class="kb-key">A</span><span class="kb-desc">-1 domicile</span></div>
+      <div class="kb-row"><span class="kb-key">D</span><span class="kb-desc">-1 visiteur</span></div>
+      <div class="kb-row"><span class="kb-key">Espace</span><span class="kb-desc">Start / Stop chrono</span></div>
+      <div class="kb-row"><span class="kb-key">R</span><span class="kb-desc">Reset chrono → 0:00</span></div>
+      <div class="kb-row"><span class="kb-key">F</span><span class="kb-desc">Reset chrono → 30:00 ↓</span></div>
+      <div class="kb-row"><span class="kb-key">P</span><span class="kb-desc">Période suivante</span></div>
+      <div class="kb-row"><span class="kb-key">1</span><span class="kb-desc">Carton jaune DOM</span></div>
+      <div class="kb-row"><span class="kb-key">⇧+1</span><span class="kb-desc">Carton jaune VIS</span></div>
+      <div class="kb-row"><span class="kb-key">2</span><span class="kb-desc">Carton rouge DOM</span></div>
+      <div class="kb-row"><span class="kb-key">⇧+2</span><span class="kb-desc">Carton rouge VIS</span></div>
+      <div class="kb-row"><span class="kb-key">3</span><span class="kb-desc">Carton bleu DOM</span></div>
+      <div class="kb-row"><span class="kb-key">⇧+3</span><span class="kb-desc">Carton bleu VIS</span></div>
+      <div class="kb-row"><span class="kb-key">4</span><span class="kb-desc">Disqualification DOM</span></div>
+      <div class="kb-row"><span class="kb-key">⇧+4</span><span class="kb-desc">Disqualification VIS</span></div>
+      <div class="kb-row"><span class="kb-key">5</span><span class="kb-desc">2 min DOM</span></div>
+      <div class="kb-row"><span class="kb-key">⇧+5</span><span class="kb-desc">2 min VIS</span></div>
+      <div class="kb-row"><span class="kb-key">T</span><span class="kb-desc">Temps mort DOM</span></div>
+      <div class="kb-row"><span class="kb-key">Y</span><span class="kb-desc">Temps mort VIS</span></div>
+      <div class="kb-row"><span class="kb-key">H</span><span class="kb-desc">Afficher / masquer score</span></div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div id="log-panel">
+    <div class="section-title">Journal d'événements</div>
+    <div id="log-list"></div>
+  </div>
+
+  <!-- APERÇU OVERLAY -->
+  <div id="preview-section">
+    <div class="preview-header">
+      <div class="section-title" style="margin-bottom:0;">Aperçu overlay (incrustation)</div>
+      <div class="preview-hint">Damier = zones transparentes · Pour OBS, utilise « Ouvrir l'overlay pour OBS »</div>
+    </div>
+    <div id="preview-frame">
+      <div id="ob-stage">
+
+        <!-- GOAL FLASH -->
+        <div id="goal-flash">
+          <div id="goal-flash-label">BUT !</div>
+          <div id="goal-flash-team"></div>
+        </div>
+
+        <!-- TIMEOUT BANNER -->
+        <div id="timeout-banner">
+          <span id="timeout-label">TEMPS MORT</span>
+          <span id="timeout-team"></span>
+          <span id="timeout-timer"></span>
+        </div>
+
+        <!-- EVENT TICKER -->
+        <div id="event-ticker"></div>
+
+        <!-- SCOREBOARD -->
+        <div id="scoreboard">
+          <div class="team-block home">
+            <div class="sanctions" id="sanctions-home"></div>
+            <div class="team-name" id="team-home">DOMICILE</div>
+          </div>
+          <div id="score-center">
+            <span class="score-digit" id="score-home">0</span>
+            <span class="score-sep">:</span>
+            <span class="score-digit" id="score-away">0</span>
+          </div>
+          <div class="team-block away">
+            <div class="team-name" id="team-away">EXTÉRIEUR</div>
+            <div class="sanctions" id="sanctions-away"></div>
+          </div>
+          <div id="time-block">
+            <div id="time-display">00:00</div>
+            <div id="period-display">1ère MT</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════
+//  MHBTV — Match Control (100% autonome)
+//  Aucun serveur requis : tout vit dans ce fichier.
+//  L'état est sauvegardé dans localStorage du navigateur
+//  et synchronisé avec la fenêtre OBS via postMessage.
+// ══════════════════════════════════════════
+
+const STORAGE_KEY = 'mhbtv_match_state_v1';
+
+function defaultState() {
+  return {
+    homeName: 'DOMICILE',
+    awayName: 'EXTÉRIEUR',
+    homeScore: 0,
+    awayScore: 0,
+    homeSanctions: { yellow: 0, red: 0, blue: 0, white: 0, min2: 0 },
+    awaySanctions: { yellow: 0, red: 0, blue: 0, white: 0, min2: 0 },
+    timer: { running: false, seconds: 0, direction: 'up', lastSync: Date.now() },
+    period: 1,
+    timeoutActive: false,
+    visible: true,
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    // Fusionne avec les valeurs par défaut au cas où la structure change un jour
+    return { ...defaultState(), ...parsed,
+      homeSanctions: { ...defaultState().homeSanctions, ...(parsed.homeSanctions || {}) },
+      awaySanctions: { ...defaultState().awaySanctions, ...(parsed.awaySanctions || {}) },
+      timer: { ...defaultState().timer, ...(parsed.timer || {}) },
+    };
+  } catch (e) {
+    console.warn('[MHBTV] localStorage illisible, état réinitialisé', e);
+    return defaultState();
+  }
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(local)); }
+  catch (e) { console.warn('[MHBTV] Impossible de sauvegarder l\'état', e); }
+}
+
+let local = loadState();
+
+const PERIOD_LABELS       = { 1: '1ère mi-temps', 2: '2ème mi-temps', 3: 'Prolongation' };
+const PERIOD_LABELS_SHORT = { 1: '1ère MT', 2: '2ème MT', 3: 'Prolong.' };
+const SANCTION_LABELS     = { yellow: 'Carton jaune', red: 'Carton rouge', blue: 'Carton bleu', white: 'Disqualification', min2: 'Suspension 2 min' };
+const TYPE_MAP            = { yellow:'yellow', red:'red', blue:'blue', white:'white', susp2:'min2' };
+
+let _timerInterval   = null;
+let _timeoutInterval = null;
+let _timeoutSeconds  = 60;
+let _goalFlashTO     = null;
+let _tickerTO        = null;
+
+// ══════════════════════════════════════════
+//  MISE À L'ÉCHELLE DE L'APERÇU
+// ══════════════════════════════════════════
+function scalePreview() {
+  const frame = document.getElementById('preview-frame');
+  const stage = document.getElementById('ob-stage');
+  const scale = frame.clientWidth / 1920;
+  stage.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', scalePreview);
+
+// ══════════════════════════════════════════
+//  RENDER — panneau de contrôle + aperçu (même fonction)
+// ══════════════════════════════════════════
+function renderAll() {
+  // --- Contrôles ---
+  document.getElementById('disp-sh').textContent = local.homeScore;
+  document.getElementById('disp-sa').textContent = local.awayScore;
+  document.getElementById('label-home-score').textContent = local.homeName;
+  document.getElementById('label-away-score').textContent = local.awayName;
+  document.getElementById('sanction-home-title').textContent = local.homeName;
+  document.getElementById('sanction-away-title').textContent = local.awayName;
+  document.getElementById('period-label').textContent = PERIOD_LABELS[local.period] || '';
+  document.getElementById('btn-startstop').textContent = local.timer.running ? '⏸ STOP' : '▶ START';
+  document.getElementById('btn-startstop').classList.toggle('running', local.timer.running);
+
+  ['home','away'].forEach(side => {
+    const s = side === 'home' ? local.homeSanctions : local.awaySanctions;
+    Object.entries(TYPE_MAP).forEach(([htmlType, serverKey]) => {
+      const el = document.getElementById(`cnt-${side}-${htmlType}`);
+      if (el) el.textContent = s[serverKey] ?? 0;
+    });
+  });
+
+  // --- Aperçu overlay (mêmes données) ---
+  document.getElementById('score-home').textContent = local.homeScore;
+  document.getElementById('score-away').textContent = local.awayScore;
+  document.getElementById('team-home').textContent  = local.homeName;
+  document.getElementById('team-away').textContent  = local.awayName;
+  renderSanctionsPreview('home');
+  renderSanctionsPreview('away');
+  document.getElementById('period-display').textContent = PERIOD_LABELS_SHORT[local.period] || '';
+  document.getElementById('scoreboard').classList.toggle('hidden', !local.visible);
+
+  saveState();
+  syncObsWindow();
+}
+
+function renderSanctionsPreview(side) {
+  const s  = side === 'home' ? local.homeSanctions : local.awaySanctions;
+  const el = document.getElementById('sanctions-' + side);
+  el.innerHTML = '';
+
+  const row1 = document.createElement('div');
+  row1.className = 'sanction-row';
+  for (let i = 0; i < s.yellow; i++) row1.appendChild(makeCard('yellow', 'J'));
+  for (let i = 0; i < s.red;    i++) row1.appendChild(makeCard('red',    'R'));
+  for (let i = 0; i < s.blue;   i++) row1.appendChild(makeCard('blue',   'B'));
+  for (let i = 0; i < s.white;  i++) row1.appendChild(makeCard('white',  'D'));
+
+  const row2 = document.createElement('div');
+  row2.className = 'sanction-row';
+  for (let i = 0; i < s.min2; i++) {
+    const b = document.createElement('span');
+    b.className = 'suspension-badge';
+    b.textContent = '2\'';
+    row2.appendChild(b);
+  }
+  el.appendChild(row1);
+  el.appendChild(row2);
+}
+
+function makeCard(type, letter) {
+  const d = document.createElement('div');
+  d.className = 'card ' + type;
+  d.textContent = letter;
+  return d;
+}
+
+function formatTime(s) {
+  const m   = Math.floor(Math.abs(s) / 60);
+  const sec = Math.abs(s) % 60;
+  return (s < 0 ? '-' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function updateChronoDisplay() {
+  document.getElementById('chrono-display').textContent = formatTime(local.timer.seconds);
+  document.getElementById('time-display').textContent   = formatTime(local.timer.seconds);
+  saveState();
+  syncObsWindow();
+}
+
+// ══════════════════════════════════════════
+//  GOAL FLASH / TICKER / TIMEOUT (aperçu local)
+// ══════════════════════════════════════════
+function showGoalFlash(teamName) {
+  document.getElementById('goal-flash-team').textContent = teamName;
+  const el = document.getElementById('goal-flash');
+  el.classList.add('show');
+  clearTimeout(_goalFlashTO);
+  _goalFlashTO = setTimeout(() => { el.classList.remove('show'); syncObsWindow(); }, 3500);
+  syncObsWindow();
+}
+
+function showTicker(msg, duration = 4000) {
+  const el = document.getElementById('event-ticker');
+  el.textContent = msg;
+  el.classList.add('visible');
+  clearTimeout(_tickerTO);
+  _tickerTO = setTimeout(() => { el.classList.remove('visible'); syncObsWindow(); }, duration);
+  syncObsWindow();
+}
+
+function startTimeoutBanner(teamName) {
+  clearInterval(_timeoutInterval);
+  _timeoutSeconds = 60;
+  document.getElementById('timeout-team').textContent  = teamName;
+  document.getElementById('timeout-timer').textContent = '1:00';
+  document.getElementById('timeout-banner').classList.add('visible');
+  _timeoutInterval = setInterval(() => {
+    _timeoutSeconds--;
+    document.getElementById('timeout-timer').textContent = formatTime(_timeoutSeconds);
+    syncObsWindow();
+    if (_timeoutSeconds <= 0) endTimeoutBanner();
+  }, 1000);
+  syncObsWindow();
+}
+
+function endTimeoutBanner() {
+  clearInterval(_timeoutInterval);
+  document.getElementById('timeout-banner').classList.remove('visible');
+  syncObsWindow();
+}
+
+// ══════════════════════════════════════════
+//  CHRONO LOCAL
+// ══════════════════════════════════════════
+function applyTimerState() {
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+  if (local.timer.running) {
+    const elapsed = Math.floor((Date.now() - local.timer.lastSync) / 1000);
+    local.timer.seconds += local.timer.direction === 'up' ? elapsed : -elapsed;
+    local.timer.lastSync = Date.now();
+    _timerInterval = setInterval(() => {
+      local.timer.seconds += local.timer.direction === 'up' ? 1 : -1;
+      updateChronoDisplay();
+    }, 1000);
+  }
+  updateChronoDisplay();
+}
+
+function startTimer() {
+  if (local.timer.running) return;
+  local.timer.running  = true;
+  local.timer.lastSync = Date.now();
+  applyTimerState();
+  renderAll();
+  log('▶ Chronomètre démarré');
+}
+
+function stopTimer() {
+  if (!local.timer.running) return;
+  local.timer.running = false;
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+  renderAll();
+  updateChronoDisplay();
+  log('⏸ Chronomètre arrêté');
+}
+
+function resetTimer(value, direction) {
+  local.timer.running   = false;
+  local.timer.seconds   = value;
+  local.timer.direction = direction;
+  local.timer.lastSync  = Date.now();
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+  renderAll();
+  updateChronoDisplay();
+  log('⟳ Reset chrono → ' + formatTime(value));
+}
+
+// ══════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════
+function doScoreInc(side) {
+  if (side === 'home') local.homeScore++;
+  else                 local.awayScore++;
+  showGoalFlash(side === 'home' ? local.homeName : local.awayName);
+  showTicker('⚽ BUT – ' + (side === 'home' ? local.homeName : local.awayName));
+  renderAll();
+  log(`⚽ BUT ${side === 'home' ? local.homeName : local.awayName} → ${local.homeScore}:${local.awayScore}`);
+}
+
+function doScoreDec(side) {
+  if (side === 'home' && local.homeScore > 0) local.homeScore--;
+  else if (side === 'away' && local.awayScore > 0) local.awayScore--;
+  renderAll();
+  log(`↩ Annulation but ${side === 'home' ? local.homeName : local.awayName}`);
+}
+
+function doSanction(side, htmlType) {
+  const skey = TYPE_MAP[htmlType];
+  if (side === 'home') local.homeSanctions[skey]++;
+  else                 local.awaySanctions[skey]++;
+  const teamName = side === 'home' ? local.homeName : local.awayName;
+  const label    = SANCTION_LABELS[skey] + ' – ' + teamName;
+  showTicker(label);
+  renderAll();
+  log('🟥 ' + label);
+}
+
+function doPeriodNext() {
+  local.period = local.period >= 3 ? 1 : local.period + 1;
+  showTicker('🕐 ' + PERIOD_LABELS[local.period]);
+  renderAll();
+  log(`🕐 Période → ${PERIOD_LABELS[local.period]}`);
+}
+
+function doTimeout(side) {
+  const teamName = side === 'home' ? local.homeName : local.awayName;
+  local.timeoutActive = true;
+  startTimeoutBanner(teamName);
+  showTicker('⏸ Temps mort – ' + teamName);
+  log(`⏸ Temps mort ${teamName}`);
+}
+
+function doToggleOverlay() {
+  local.visible = !local.visible;
+  renderAll();
+  log('👁 Score ' + (local.visible ? 'affiché' : 'masqué'));
+}
+
+function doFullReset() {
+  if (!confirm('Réinitialiser tout le score, sanctions et chrono ?')) return;
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+  const keepHome = local.homeName, keepAway = local.awayName;
+  local = defaultState();
+  local.homeName = keepHome;
+  local.awayName = keepAway;
+  renderAll();
+  updateChronoDisplay();
+  log('⟳ Réinitialisation complète');
+}
+
+// ══════════════════════════════════════════
+//  FENÊTRE OBS DÉTACHÉE
+// ══════════════════════════════════════════
+// On ouvre une fenêtre séparée, contenant EXACTEMENT le même bloc
+// #ob-stage, sur fond réellement transparent. Cette fenêtre se met
+// à jour directement (même processus JS, pas de réseau).
+let _obsWin = null;
+
+function openObsWindow() {
+  _obsWin = window.open('', 'mhbtv_obs_overlay', 'width=1920,height=1080');
+  if (!_obsWin) { alert('Le navigateur a bloqué la fenêtre. Autorise les popups pour ce site.'); return; }
+
+  const stageHTML = document.getElementById('ob-stage').outerHTML;
+  const styleHTML = Array.from(document.querySelectorAll('style'))
+    .map(s => s.outerHTML).join('\n');
+
+  _obsWin.document.open();
+  _obsWin.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MHBTV – OBS Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+${styleHTML}
+<style>
+  html, body { background: transparent !important; margin:0; padding:0; overflow:hidden; }
+  #ob-stage { position: relative !important; transform: none !important; }
+  #preview-frame, .preview-header { display:none; }
+</style>
+</head>
+<body>
+${stageHTML}
+</body>
+</html>`);
+  _obsWin.document.close();
+  log('⛶ Fenêtre OBS ouverte — capture-la avec « Window Capture »');
+}
+
+function syncObsWindow() {
+  if (!_obsWin || _obsWin.closed) return;
+  try {
+    const liveStage = document.getElementById('ob-stage');
+    const obsStage   = _obsWin.document.getElementById('ob-stage');
+    if (obsStage) obsStage.innerHTML = liveStage.innerHTML;
+  } catch (e) { /* fenêtre fermée entre-temps */ }
+}
+
+// ══════════════════════════════════════════
+//  LOG
+// ══════════════════════════════════════════
+function log(msg) {
+  const now = new Date();
+  const t = [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map(n => String(n).padStart(2,'0')).join(':');
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = `<span class="log-time">${t}</span><span class="log-msg">${msg}</span>`;
+  document.getElementById('log-list').prepend(el);
+}
+
+// ══════════════════════════════════════════
+//  ÉQUIPES
+// ══════════════════════════════════════════
+document.getElementById('btn-teams').addEventListener('click', () => {
+  local.homeName = document.getElementById('input-home').value.toUpperCase() || 'DOMICILE';
+  local.awayName = document.getElementById('input-away').value.toUpperCase() || 'EXTÉRIEUR';
+  renderAll();
+  log(`✏ Équipes → ${local.homeName} vs ${local.awayName}`);
+});
+
+// ══════════════════════════════════════════
+//  BINDINGS BOUTONS
+// ══════════════════════════════════════════
+document.getElementById('btn-sh-plus').addEventListener('click',  () => doScoreInc('home'));
+document.getElementById('btn-sh-minus').addEventListener('click', () => doScoreDec('home'));
+document.getElementById('btn-sa-plus').addEventListener('click',  () => doScoreInc('away'));
+document.getElementById('btn-sa-minus').addEventListener('click', () => doScoreDec('away'));
+
+document.getElementById('btn-startstop').addEventListener('click', () => local.timer.running ? stopTimer() : startTimer());
+document.getElementById('btn-reset0').addEventListener('click',   () => resetTimer(0,    'up'));
+document.getElementById('btn-reset30').addEventListener('click',  () => resetTimer(1800, 'down'));
+
+document.getElementById('btn-period').addEventListener('click',         () => doPeriodNext());
+document.getElementById('btn-to-home').addEventListener('click',        () => doTimeout('home'));
+document.getElementById('btn-to-away').addEventListener('click',        () => doTimeout('away'));
+document.getElementById('btn-toggle-overlay').addEventListener('click', () => doToggleOverlay());
+document.getElementById('btn-reset-all').addEventListener('click',      () => doFullReset());
+document.getElementById('btn-open-obs').addEventListener('click',       () => openObsWindow());
+
+document.querySelectorAll('.btn-sanction').forEach(btn => {
+  btn.addEventListener('click', () => doSanction(btn.dataset.side, btn.dataset.type));
+});
+
+// ══════════════════════════════════════════
+//  RACCOURCIS CLAVIER
+// ══════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  const k = e.key, s = e.shiftKey;
+  switch(k) {
+    case 'q': case 'Q': if (!s) doScoreInc('home'); break;
+    case 'e': case 'E': if (!s) doScoreInc('away'); break;
+    case 'a': case 'A': if (!s) doScoreDec('home'); break;
+    case 'd': case 'D': if (!s) doScoreDec('away'); break;
+    case ' ': e.preventDefault(); local.timer.running ? stopTimer() : startTimer(); break;
+    case 'r': case 'R': if (!s) resetTimer(0,    'up');   break;
+    case 'f': case 'F': if (!s) resetTimer(1800, 'down'); break;
+    case 'p': case 'P': doPeriodNext(); break;
+    case '1': case '!': doSanction(s ? 'away' : 'home', 'yellow'); break;
+    case '2': case '@': doSanction(s ? 'away' : 'home', 'red');    break;
+    case '3': case '#': doSanction(s ? 'away' : 'home', 'blue');   break;
+    case '4': case '$': doSanction(s ? 'away' : 'home', 'white');  break;
+    case '5': case '%': doSanction(s ? 'away' : 'home', 'susp2'); break;
+    case 't': case 'T': if (!s) doTimeout('home'); break;
+    case 'y': case 'Y': if (!s) doTimeout('away'); break;
+    case 'h': case 'H': doToggleOverlay(); break;
+  }
+});
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+document.getElementById('status-dot').classList.add('live');
+document.getElementById('status-label').textContent = 'LOCAL';
+document.getElementById('input-home').value = local.homeName;
+document.getElementById('input-away').value = local.awayName;
+applyTimerState();
+renderAll();
+scalePreview();
+log('🟢 Match Control initialisé (mode local, sans serveur)');
+</script>
+</body>
+</html>
